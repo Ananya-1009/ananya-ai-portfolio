@@ -143,7 +143,11 @@ async def chat(request: ChatRequest):
 
         except HTTPException:
             raise
-        except Exception:
+        except Exception as exc:
+            print(
+                f"Gemini API error: {type(exc).__name__}: {exc}",
+                flush=True,
+            )
             raise HTTPException(
                 status_code=502,
                 detail=(
