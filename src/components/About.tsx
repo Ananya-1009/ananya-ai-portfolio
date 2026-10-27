@@ -24,6 +24,24 @@ function About(){
                     <span>AI & Machine Learning</span>
                     <span>Problem Solving</span>
                 </div>
+                      <div className="resume-actions">
+                    <a
+                        href="/resume.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="resume-button resume-button-primary"
+                    >
+                        View Resume ↗
+                    </a>
+
+                    <a
+                        href="/resume.pdf"
+                        download="Ananya_Soni_Resume.pdf"
+                        className="resume-button resume-button-secondary"
+                    >
+                        Download Resume ↓
+                    </a>
+                </div>
             </div>
         </section>
     )

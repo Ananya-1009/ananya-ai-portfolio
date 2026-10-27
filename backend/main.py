@@ -1,6 +1,6 @@
 
 import os
-
+import asyncio
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from ollama import AsyncClient
@@ -19,6 +19,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
         "https://ananya-ai-portfolio-ten.vercel.app",
     ],
     allow_credentials=False,
@@ -27,7 +28,7 @@ app.add_middleware(
 )
 
 ollama_client = AsyncClient()
-
+gemini_client = None
 
 class HistoryMessage(BaseModel):
     role: Literal["user", "assistant"]
@@ -123,14 +124,34 @@ async def chat(request: ChatRequest):
         )
 
         try:
-            client = genai.Client(api_key=api_key)
+            global gemini_client
 
-            response = await client.aio.models.generate_content(
-                model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
+            
+            if gemini_client is None:
+                gemini_client = genai.Client(
+                    api_key=api_key,
+                    http_options=types.HttpOptions(
+                        timeout=20000,
+                        retry_options=types.HttpRetryOptions(
+                            attempts=1,
+                        ),
+                    ),
+                )
+
+            client = gemini_client
+
+
+            client = gemini_client
+            response = await asyncio.wait_for(
+                client.aio.models.generate_content(
+                    model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        max_output_tokens=250,
+                    ),
                 ),
+                timeout=25,
             )
 
             if not response.text:
