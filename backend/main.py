@@ -70,7 +70,7 @@ def health_check():
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    history = request.history[-8:]
+    history = request.history[-4:]
     system_prompt = get_system_prompt()
 
     # Local development: continue using Ollama.
@@ -162,8 +162,18 @@ async def chat(request: ChatRequest):
 
             return {"answer": response.text}
 
+       
         except HTTPException:
             raise
+        except asyncio.TimeoutError:
+            print("Gemini API error: request timed out", flush=True)
+            raise HTTPException(
+                status_code=504,
+                detail=(
+                    "Jarvis is taking too long to respond. "
+                    "Please try again in a moment."
+                ),
+            )
         except Exception as exc:
             print(
                 f"Gemini API error: {type(exc).__name__}: {exc}",
@@ -172,10 +182,11 @@ async def chat(request: ChatRequest):
             raise HTTPException(
                 status_code=502,
                 detail=(
-                    "Gemini could not generate a response. "
-                    "Check the backend configuration and API usage limits."
+                    "Jarvis could not generate a response. "
+                    "Please try again shortly."
                 ),
             )
+
 
     raise HTTPException(
         status_code=500,
